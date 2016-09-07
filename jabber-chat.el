@@ -645,7 +645,7 @@ If DONT-PRINT-NICK-P is true, don't include nickname."
                               ,(if (> (length body) 0)
                                    `(body () ,body))))
   (if (and jabber-history-enabled (not (string= type "groupchat")))
-      (jabber-history-log-message "out" nil to body (current-time))))
+      (jabber-history-log-message "out" nil to body (current-time) type)))
 
 (add-to-list 'jabber-jid-chat-menu
 	     (cons "Start chat" 'jabber-chat-with))

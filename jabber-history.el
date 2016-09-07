@@ -132,7 +132,7 @@ in the message history.")
 			  (car (jabber-xml-get-children xml-data 'body)))))
 	      (timestamp (jabber-message-timestamp xml-data)))
 	  (when (and from text)
-	    (jabber-history-log-message "in" from nil text timestamp)))))))
+	    (jabber-history-log-message "in" from nil text timestamp (jabber-xml-get-attribute xml-data 'type))))))))
 
 (add-hook 'jabber-chat-send-hooks 'jabber-history-send-hook)
 
@@ -144,7 +144,7 @@ in the message history.")
   ;; This function is called from a chat buffer, so jabber-chatting-with
   ;; contains the desired value.
   (if jabber-history-enabled
-      (jabber-history-log-message "out" nil jabber-chatting-with body (current-time))))
+      (jabber-history-log-message "out" nil jabber-chatting-with body (current-time) "chat")))
 
 (defun jabber-history-filename (contact)
   "Return a history filename for CONTACT if the per-user file
