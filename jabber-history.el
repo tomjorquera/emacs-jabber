@@ -155,7 +155,7 @@ in the message history.")
     (concat jabber-history-dir
 	    "/" (symbol-name (jabber-jid-symbol contact)))))
 
-(defun jabber-history-log-message (direction from to body timestamp)
+(defun jabber-history-log-message (direction from to body timestamp &optional type)
   "Log a message"
   (with-temp-buffer
     ;; Remove properties
