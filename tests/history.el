@@ -36,4 +36,24 @@
 	)
     (delete-file jabber-global-history-filename)))
 
+;; 3. Test the per-user hist file for direct groupchat messages
+(let ((jabber-use-global-history nil)
+      (jabber-expected-filename (jabber-history-filename "balcony@verona.net%2fromeo" "chat"))
+      ;; Jabber's birthday :)
+      (our-time (encode-time 0 0 0 4 1 1999 0))
+      (jabber-pending-groupchats (make-hash-table))
+      (jabber-separate-muc-chat-msg t))
+  (unwind-protect
+      (progn
+        ;; let's assume a pending groupchat
+        (puthash (jabber-jid-symbol "balcony@verona.net") "romeo" jabber-pending-groupchats)
+        (jabber-history-log-message "in" "balcony@verona.net/romeo" nil "hi" our-time "chat")
+        (with-temp-buffer
+          (insert-file-contents-literally jabber-expected-filename)
+          (let ((expected "\\[\"\\([^\"]+\\)\" \"in\" \"balcony@verona.net/romeo\" \"me\" \"hi\"]\n")
+                (actual (buffer-string)))
+            (unless (string-match expected actual)
+              (error "Testcase 3 failed; %S doesn't match %S" actual expected)))))
+    (delete-file jabber-expected-filename)))
+
 ;; arch-tag: 43dd7ffe-22d7-11dd-9a7c-000a95c2fcd0
