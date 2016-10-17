@@ -92,6 +92,20 @@ number after the last rotation."
   :type 'integer
   :group 'jabber-history)
 
+(defcustom jabber-separate-muc-chat-msg nil
+  "Whether to log chat messages received from muc
+in separate files or not.
+If nil, chat message received from muc (aka direct messages, private
+messages) will be stored the same way than group chat messages, and will appear
+identically in the logs (so it will not be possible to distinguish between
+chat and groupchat messages.
+If set to t, these messages will be stored in separate files. The path of these
+files is then defined by the jabber-history-muc-chat-filename function.
+Note that this option has no effect if `jabber-global-history-filename' is set
+to t"
+  :type 'boolean
+  :group 'jabber-history)
+
 (defvar jabber-history-inhibit-received-message-functions nil
   "Functions determining whether to log an incoming message stanza.
 The functions in this list are called with two arguments,
@@ -146,14 +160,22 @@ in the message history.")
   (if jabber-history-enabled
       (jabber-history-log-message "out" nil jabber-chatting-with body (current-time) "chat")))
 
-(defun jabber-history-filename (contact)
-  "Return a history filename for CONTACT if the per-user file
-  loggin strategy is used or the global history filename."
+(defun jabber-history-filename (contact &optional type)
+  "Return a history filename for CONTACT, based on the options the user selected.
+The optional `type' parameter can be passed to enable a specific logging strategy
+based on the type of message to log"
   (if jabber-use-global-history
       jabber-global-history-filename
-    ;; jabber-jid-symbol is the best canonicalization we have.
-    (concat jabber-history-dir
-	    "/" (symbol-name (jabber-jid-symbol contact)))))
+    (if (and jabber-separate-muc-chat-msg
+             ;; this is a muc chat message, log it separately
+             (string= type "chat")
+             (gethash (jabber-jid-symbol (or from to))
+                      jabber-pending-groupchats))
+        (concat jabber-history-dir
+                "/" (replace-regexp-in-string "/" "%2f" contact) )
+      ;; jabber-jid-symbol is the best canonicalization we have.
+      (concat jabber-history-dir
+              "/" (symbol-name (jabber-jid-symbol contact))))))
 
 (defun jabber-history-log-message (direction from to body timestamp &optional type)
   "Log a message"
@@ -179,7 +201,7 @@ in the message history.")
 			"\"me\"")
 		    body))
     (let ((coding-system-for-write 'utf-8)
-	  (history-file (jabber-history-filename (or from to))))
+   (history-file (jabber-history-filename (or from to) type)))
       (when (and (not jabber-use-global-history)
 		 (not (file-directory-p jabber-history-dir)))
 	(make-directory jabber-history-dir))
